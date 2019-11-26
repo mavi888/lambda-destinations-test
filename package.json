@@ -1,10 +1,10 @@
 {
-  "name": "sam-simplest-app",
+  "name": "test-destinations",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "config": {
-    "stackName": "learning-serverless-sam-simplest-app",
+    "stackName": "learning-serverless-test-destinations",
     "bucketName": "learning-serverless-publish-sam-app"
   },
   "scripts": {

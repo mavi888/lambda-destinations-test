@@ -2,35 +2,62 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 
 Resources:
-
-  MyApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: dev
     
   HelloFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: handler.hello
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       CodeUri: ./hello
+      Policies: 
+        - LambdaInvokePolicy:
+            FunctionName: 
+              !Ref OnSuccessFunction
+        - LambdaInvokePolicy:
+            FunctionName: 
+              !Ref OnFailureFunction
       Events:
-        HelloAPI:
-          Type: Api
+        InvokeFunction:
+          Type: S3
           Properties:
-            RestApiId: !Ref MyApi
-            Path: /hello
-            Method: GET
+            Bucket: !Ref SrcBucket
+            Events: s3:ObjectCreated:*
+
+  SrcBucket:
+    Type: AWS::S3::Bucket
+  
+  OnSuccessFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: handler.success
+      Runtime: nodejs12.x
+      CodeUri: ./success
+
+  OnFailureFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: handler.failure
+      Runtime: nodejs12.x
+      CodeUri: ./failure
+    
+  EventInvokeConfig:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+        FunctionName: !Ref HelloFunction
+        Qualifier: "$LATEST"
+        MaximumEventAgeInSeconds: 600
+        MaximumRetryAttempts: 0
+        DestinationConfig:
+          OnSuccess:
+            Destination: !GetAtt OnSuccessFunction.Arn
+          OnFailure:
+            Destination: !GetAtt OnFailureFunction.Arn
   
 Outputs:
   Region:
     Description: "Region"
     Value: !Ref AWS::Region
 
-  ApiId:
-    Description: "API ID"
-    Value: !Ref MyApi
-
-  ApiUrl:
-    Description: "API endpoint URL for Prod environment"
-    Value: !Sub 'https://${MyApi}.execute-api.${AWS::Region}.amazonaws.com/dev/'
+  S3Bucket:
+    Description: "Bucket"
+    Value: !Ref SrcBucket
