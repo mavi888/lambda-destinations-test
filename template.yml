@@ -16,15 +16,6 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: 
               !Ref OnFailureFunction
-      Events:
-        InvokeFunction:
-          Type: S3
-          Properties:
-            Bucket: !Ref SrcBucket
-            Events: s3:ObjectCreated:*
-
-  SrcBucket:
-    Type: AWS::S3::Bucket
   
   OnSuccessFunction:
     Type: 'AWS::Serverless::Function'
@@ -57,7 +48,3 @@ Outputs:
   Region:
     Description: "Region"
     Value: !Ref AWS::Region
-
-  S3Bucket:
-    Description: "Bucket"
-    Value: !Ref SrcBucket
